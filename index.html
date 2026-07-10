@@ -292,8 +292,8 @@
   <div class="field">
     <label>Updated by</label>
     <select class="input" id="recordedBy">
-      <option value="Owen" selected>Owen</option>
       <option value="Lhen">Lhen</option>
+      <option value="Owen">Owen</option>
     </select>
   </div>
 
@@ -345,6 +345,11 @@
     <textarea class="input" id="notes" rows="3" placeholder="Any extra detail..."></textarea>
   </div>
 
+  <div class="field">
+    <label>Payment method notes <span style="text-transform:none; font-weight:400; font-size:11px;">(optional)</span></label>
+    <textarea class="input" id="paymentMethodNotes" rows="2" placeholder="e.g. last 4 digits, account name..."></textarea>
+  </div>
+
   <div class="footer">
     <button class="submit-btn" id="submitBtn">Add expense</button>
   </div>
@@ -367,14 +372,14 @@
 
 <script>
   // ─── CUSTOMIZE HERE ───────────────────────────────────────────
-  const WEBHOOK_URL   = "https://script.google.com/macros/s/AKfycbxiSoxRMG9Z0nexUPqZk83rdlmMno21o3uXVUJqCjoFqgUUdd8ny3hD1m-f7Ua_tdWdcw/exec";
+  const WEBHOOK_URL   = "PASTE_YOUR_APPS_SCRIPT_URL_HERE";
   const CURRENCY      = "₱";
-  const PAYMENT_METHODS   = ["Credit Card", "Cash", "Online Banking"];
+  const PAYMENT_METHODS   = ["Credit Card", "GCash", "Cash", "Debit Card", "Bank Transfer"];
   const PAYMENT_DEFAULT   = "Credit Card";
-  const DEFAULT_LABELS    = ["Food", "Transport", "Groceries", "Household", "Utilities", "Shopping", "Health", "Family", "Other"];
-  const PAID_BY_OPTIONS   = ["Owen", "Lhen"];
-  const PAID_BY_DEFAULT   = "Owen";
-  const RECORDED_BY_DEFAULT = "Owen";
+  const DEFAULT_LABELS    = ["Food", "Transport", "Groceries", "Bills", "Shopping", "Health", "Entertainment", "Other"];
+  const PAID_BY_OPTIONS   = ["Lhen", "Owen"];
+  const PAID_BY_DEFAULT   = "Lhen";
+  const RECORDED_BY_DEFAULT = "Lhen";
   // ──────────────────────────────────────────────────────────────
 
   // Currency label
@@ -471,10 +476,11 @@
       amount:         parseFloat(amountInput.value),
       payment_method: paymentSelect.value,
       labels:         Array.from(selectedLabels).join(", "),
-      split:          document.getElementById("split").checked,
-      paid_by:        Array.from(selectedPaidBy).join(", "),
-      notes:          document.getElementById("notes").value.trim(),
-      updated_by:     document.getElementById("recordedBy").value
+      split:                  document.getElementById("split").checked,
+      paid_by:                Array.from(selectedPaidBy).join(", "),
+      notes:                  document.getElementById("notes").value.trim(),
+      payment_method_notes:   document.getElementById("paymentMethodNotes").value.trim(),
+      updated_by:             document.getElementById("recordedBy").value
     };
   }
 
@@ -535,6 +541,7 @@
     amountInput.value = "";
     document.getElementById("description").value = "";
     document.getElementById("notes").value = "";
+    document.getElementById("paymentMethodNotes").value = "";
     document.getElementById("split").checked = false;
     setToday();
     paymentSelect.value = PAYMENT_DEFAULT;
