@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Expenses">
+<meta name="theme-color" content="#1c1c1e">
+<title>Expenses</title>
+<style>
+  :root {
+    --bg: #1c1c1e;
+    --card: #2c2c2e;
+    --text: #ffffff;
+    --hint: #8e8e93;
+    --border: rgba(142,142,147,0.2);
+    --accent: #ff8a3d;
+    --green: #34c759;
+    --danger: #ff3b30;
+    --link: #0a84ff;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 20px 16px 110px;
+    min-height: 100vh;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 8px 0 24px;
+    letter-spacing: -0.5px;
+  }
+
+  h1 span {
+    color: var(--accent);
+  }
+
+  .field { margin-bottom: 20px; }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--hint);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 8px;
+  }
+
+  .input, select, textarea {
+    width: 100%;
+    padding: 13px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-size: 16px;
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+    font-family: inherit;
+  }
+
+  textarea { resize: vertical; }
+
+  select {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' stroke='%238e8e93' stroke-width='1.5' fill='none' fill-rule='evenodd'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+
+  /* Amount */
+  .amount-row {
+    display: flex;
+    align-items: center;
+    background: #000000;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .amount-row .currency {
+    padding: 0 4px 0 16px;
+    color: var(--hint);
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .amount-row input {
+    border: none;
+    background: transparent;
+    flex: 1;
+    font-size: 32px;
+    font-weight: 800;
+    padding: 14px 16px 14px 4px;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+  }
+  .amount-row input:focus { outline: none; }
+  .amount-row input::placeholder { color: rgba(255,255,255,0.2); }
+
+  .error-text {
+    color: var(--danger);
+    font-size: 13px;
+    margin-top: 6px;
+    display: none;
+  }
+
+  /* Chips */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip {
+    padding: 9px 16px;
+    border-radius: 999px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+  }
+
+  .chip.selected {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .chip.add-new {
+    color: var(--link);
+    border-style: dashed;
+    background: transparent;
+  }
+
+  .new-label-input {
+    display: none;
+    margin-top: 10px;
+  }
+
+  /* Toggle */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--card);
+    border-radius: 12px;
+    padding: 15px 16px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+  }
+
+  .toggle-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .toggle {
+    position: relative;
+    width: 51px;
+    height: 31px;
+    flex-shrink: 0;
+  }
+
+  .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+
+  .toggle-thumb {
+    position: absolute;
+    inset: 0;
+    background: rgba(120,120,128,0.4);
+    border-radius: 999px;
+    transition: background 0.2s ease;
+    cursor: pointer;
+  }
+
+  .toggle-thumb::after {
+    content: "";
+    position: absolute;
+    width: 27px;
+    height: 27px;
+    left: 2px;
+    top: 2px;
+    background: #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    transition: transform 0.2s ease;
+  }
+
+  .toggle input:checked + .toggle-thumb { background: var(--green); }
+  .toggle input:checked + .toggle-thumb::after { transform: translateX(20px); }
+
+  /* Footer */
+  .footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    transition: background 0.15s ease, transform 0.1s ease;
+    cursor: pointer;
+  }
+
+  .submit-btn:active { transform: scale(0.97); }
+
+  .submit-btn.submitting {
+    background: var(--green);
+    pointer-events: none;
+  }
+
+  .submit-btn:disabled { opacity: 0.5; }
+
+  /* Success / Error screens */
+  .result-screen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 32px;
+    z-index: 100;
+  }
+
+  .result-screen.visible { display: flex; }
+
+  .result-icon {
+    font-size: 72px;
+    margin-bottom: 20px;
+    line-height: 1;
+  }
+
+  .result-title {
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 10px;
+  }
+
+  .result-sub {
+    font-size: 16px;
+    color: var(--hint);
+    margin-bottom: 32px;
+  }
+
+  .result-btn {
+    padding: 14px 32px;
+    border-radius: 14px;
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .result-btn.green { background: var(--green); color: #fff; }
+  .result-btn.red { background: var(--danger); color: #fff; }
+</style>
+</head>
+<body>
+
+  <h1>New <span>expense</span></h1>
+
+  <div class="field">
+    <label>Updated by</label>
+    <select class="input" id="recordedBy">
+      <option value="Owen" selected>Owen</option>
+      <option value="Lhen">Lhen</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>Amount</label>
+    <div class="amount-row">
+      <span class="currency" id="currencyLabel">₱</span>
+      <input id="amount" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" autofocus>
+    </div>
+    <div class="error-text" id="amountError">Enter an amount greater than 0.</div>
+  </div>
+
+  <div class="field">
+    <label>Description</label>
+    <input class="input" id="description" type="text" placeholder="e.g. Grab to office, Lunch with team">
+  </div>
+
+  <div class="field">
+    <label>Date</label>
+    <input class="input" id="date" type="date">
+  </div>
+
+  <div class="field">
+    <label>Payment method</label>
+    <select class="input" id="paymentMethod"></select>
+  </div>
+
+  <div class="field">
+    <label>Labels</label>
+    <div class="chips" id="labelChips"></div>
+    <input class="input new-label-input" id="newLabelInput" type="text" placeholder="Type a new label, press enter">
+  </div>
+
+  <div class="toggle-row">
+    <span class="toggle-label">Split</span>
+    <label class="toggle">
+      <input type="checkbox" id="split">
+      <span class="toggle-thumb"></span>
+    </label>
+  </div>
+
+  <div class="field">
+    <label>Paid by</label>
+    <div class="chips" id="paidByChips"></div>
+  </div>
+
+  <div class="field">
+    <label>Notes <span style="text-transform:none; font-weight:400; font-size:11px;">(optional)</span></label>
+    <textarea class="input" id="notes" rows="3" placeholder="Any extra detail..."></textarea>
+  </div>
+
+  <div class="footer">
+    <button class="submit-btn" id="submitBtn">Add expense</button>
+  </div>
+
+  <!-- Success screen -->
+  <div class="result-screen" id="successScreen">
+    <div class="result-icon">✅</div>
+    <div class="result-title">Logged!</div>
+    <div class="result-sub" id="successSub"></div>
+    <button class="result-btn green" onclick="resetForm()">Log another</button>
+  </div>
+
+  <!-- Error screen -->
+  <div class="result-screen" id="errorScreen">
+    <div class="result-icon">⚠️</div>
+    <div class="result-title">Something went wrong</div>
+    <div class="result-sub" id="errorSub"></div>
+    <button class="result-btn red" onclick="hideError()">Try again</button>
+  </div>
+
+<script>
+  // ─── CUSTOMIZE HERE ───────────────────────────────────────────
+  const WEBHOOK_URL   = "https://script.google.com/macros/s/AKfycbxiSoxRMG9Z0nexUPqZk83rdlmMno21o3uXVUJqCjoFqgUUdd8ny3hD1m-f7Ua_tdWdcw/exec";
+  const CURRENCY      = "₱";
+  const PAYMENT_METHODS   = ["Credit Card", "Cash", "Online Banking"];
+  const PAYMENT_DEFAULT   = "Credit Card";
+  const DEFAULT_LABELS    = ["Food", "Transport", "Groceries", "Household", "Utilities", "Shopping", "Health", "Family", "Other"];
+  const PAID_BY_OPTIONS   = ["Owen", "Lhen"];
+  const PAID_BY_DEFAULT   = "Owen";
+  const RECORDED_BY_DEFAULT = "Owen";
+  // ──────────────────────────────────────────────────────────────
+
+  // Currency label
+  document.getElementById("currencyLabel").textContent = CURRENCY;
+
+  document.getElementById("recordedBy").value = RECORDED_BY_DEFAULT;
+  const dateInput = document.getElementById("date");
+  function setToday() {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm   = String(d.getMonth() + 1).padStart(2, "0");
+    const dd   = String(d.getDate()).padStart(2, "0");
+    dateInput.value = `${yyyy}-${mm}-${dd}`;
+  }
+  setToday();
+
+  // Payment method dropdown
+  const paymentSelect = document.getElementById("paymentMethod");
+  PAYMENT_METHODS.forEach(m => {
+    const o = document.createElement("option");
+    o.value = o.textContent = m;
+    paymentSelect.appendChild(o);
+  });
+  paymentSelect.value = PAYMENT_DEFAULT;
+
+  // Labels chips
+  let labels = [...DEFAULT_LABELS];
+  let selectedLabels = new Set();
+  const labelChipsEl  = document.getElementById("labelChips");
+  const newLabelInput = document.getElementById("newLabelInput");
+
+  function renderLabelChips() {
+    labelChipsEl.innerHTML = "";
+    labels.forEach(label => {
+      const chip = document.createElement("div");
+      chip.className = "chip" + (selectedLabels.has(label) ? " selected" : "");
+      chip.textContent = label;
+      chip.addEventListener("click", () => {
+        selectedLabels.has(label) ? selectedLabels.delete(label) : selectedLabels.add(label);
+        renderLabelChips();
+      });
+      labelChipsEl.appendChild(chip);
+    });
+    const addChip = document.createElement("div");
+    addChip.className = "chip add-new";
+    addChip.textContent = "+ Add";
+    addChip.addEventListener("click", () => {
+      newLabelInput.style.display = "block";
+      newLabelInput.focus();
+    });
+    labelChipsEl.appendChild(addChip);
+  }
+  renderLabelChips();
+
+  newLabelInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      const val = newLabelInput.value.trim();
+      if (val && !labels.includes(val)) labels.push(val);
+      if (val) selectedLabels.add(val);
+      newLabelInput.value = "";
+      newLabelInput.style.display = "none";
+      renderLabelChips();
+    }
+  });
+
+  // Paid by chips
+  let selectedPaidBy = new Set([PAID_BY_DEFAULT]);
+  const paidByChipsEl = document.getElementById("paidByChips");
+
+  function renderPaidByChips() {
+    paidByChipsEl.innerHTML = "";
+    PAID_BY_OPTIONS.forEach(name => {
+      const chip = document.createElement("div");
+      chip.className = "chip" + (selectedPaidBy.has(name) ? " selected" : "");
+      chip.textContent = name;
+      chip.addEventListener("click", () => {
+        selectedPaidBy.has(name) ? selectedPaidBy.delete(name) : selectedPaidBy.add(name);
+        renderPaidByChips();
+      });
+      paidByChipsEl.appendChild(chip);
+    });
+  }
+  renderPaidByChips();
+
+  // Submit
+  const amountInput  = document.getElementById("amount");
+  const amountError  = document.getElementById("amountError");
+  const submitBtn    = document.getElementById("submitBtn");
+
+  function buildPayload() {
+    return {
+      date:           dateInput.value,
+      description:    document.getElementById("description").value.trim(),
+      amount:         parseFloat(amountInput.value),
+      payment_method: paymentSelect.value,
+      labels:         Array.from(selectedLabels).join(", "),
+      split:          document.getElementById("split").checked,
+      paid_by:        Array.from(selectedPaidBy).join(", "),
+      notes:          document.getElementById("notes").value.trim(),
+      updated_by:     document.getElementById("recordedBy").value
+    };
+  }
+
+  function validate() {
+    const amt = parseFloat(amountInput.value);
+    const valid = amt && amt > 0;
+    amountError.style.display = valid ? "none" : "block";
+    return valid;
+  }
+
+  async function submit() {
+    if (!validate()) return;
+
+    submitBtn.classList.add("submitting");
+    submitBtn.textContent = "Logging...";
+
+    const payload = buildPayload();
+
+    try {
+      await fetch(WEBHOOK_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      // no-cors means we can't read the response, so we optimistically show success
+      showSuccess(payload);
+    } catch (err) {
+      showError(err.message || "Network error");
+    }
+  }
+
+  submitBtn.addEventListener("click", submit);
+
+  // Result screens
+  function showSuccess(payload) {
+    document.getElementById("successSub").textContent =
+      `${CURRENCY}${payload.amount.toLocaleString()} · ${payload.payment_method} · ${payload.date}`;
+    document.getElementById("successScreen").classList.add("visible");
+  }
+
+  function showError(msg) {
+    submitBtn.classList.remove("submitting");
+    submitBtn.textContent = "Add expense";
+    document.getElementById("errorSub").textContent = msg;
+    document.getElementById("errorScreen").classList.add("visible");
+  }
+
+  function hideError() {
+    document.getElementById("errorScreen").classList.remove("visible");
+  }
+
+  function resetForm() {
+    document.getElementById("successScreen").classList.remove("visible");
+    submitBtn.classList.remove("submitting");
+    submitBtn.textContent = "Add expense";
+    // Reset fields
+    amountInput.value = "";
+    document.getElementById("description").value = "";
+    document.getElementById("notes").value = "";
+    document.getElementById("split").checked = false;
+    setToday();
+    paymentSelect.value = PAYMENT_DEFAULT;
+    document.getElementById("recordedBy").value = RECORDED_BY_DEFAULT;
+    selectedLabels = new Set();
+    selectedPaidBy = new Set([PAID_BY_DEFAULT]);
+    renderLabelChips();
+    renderPaidByChips();
+  }
+</script>
+</body>
+</html>
